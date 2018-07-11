@@ -5,11 +5,13 @@ cd "$(dirname "${BASH_SOURCE[0]}")/../.." && vagrant_dir=$PWD
 source "${vagrant_dir}/scripts/output_functions.sh"
 
 magento_ce_dir="${vagrant_dir}/magento2ce"
+magento_b2b_dir="${magento_ce_dir}/magento2b2b"
 magento_ee_dir="${magento_ce_dir}/magento2ee"
 magento_ce_sample_data_dir="${magento_ce_dir}/magento2ce-sample-data"
 magento_ee_sample_data_dir="${magento_ce_dir}/magento2ee-sample-data"
 php_executable="$(bash "${vagrant_dir}/scripts/host/get_path_to_php.sh")"
 install_sample_data="$(bash "${vagrant_dir}/scripts/get_config_value.sh" "magento_install_sample_data")"
+install_b2b="$(bash "${vagrant_dir}/scripts/get_config_value.sh" "magento_install_b2b")"
 
 status "Linking/unlinking sample data according to config.yaml"
 incrementNestingLevel
@@ -33,7 +35,12 @@ fi
 if [[ ${install_ee} -eq 1 ]]; then
     status "Linking EE to CE"
     "${php_executable}" -f "${magento_ee_dir}/dev/tools/build-ee.php" -- --command=link --ee-source="${magento_ee_dir}" --ce-source="${magento_ce_dir}" --exclude=true 2> >(logError) > >(log)
+    if [[ ${install_b2b} -eq 1 ]]; then
+        status "Linking B2B to CE"
+        "${php_executable}" -f "${magento_ee_dir}/dev/tools/build-ee.php" -- --command=link --ee-source="${magento_b2b_dir}" --ce-source="${magento_ce_dir}" --exclude=true 2> >(logError) > >(log)
+    fi
 fi
+
 
 if [[ ${install_sample_data} -eq 1 ]]; then
     # Installing CE or EE, in both cases CE sample data should be linked
